@@ -225,3 +225,4 @@ pyrightconfig.json
 
 *.h5
 models/yolov8_tf/1/model.savedmodel/*
+!models/yolov8_tf/1/model.savedmodel/.gitkeep

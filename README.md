@@ -6,7 +6,7 @@ This is a Triton Inference Server container for YOLOv8 models which built with k
 models/
     yolov8_tf/
         1/
-            model.onnx
+           model.savedmodel
         config.pbtxt
         
     postprocess/

@@ -1,0 +1,10 @@
+{
+    "Cell": 0,
+    "Cell_RGB_100": 1,
+    "Cell_RGB_010": 2,
+    "Cell_RGB_001": 3,
+    "Cell_RGB_110": 4,
+    "Cell_RGB_011": 5,
+    "Cell_RGB_101": 6,
+    "Cell cluster": 7
+}

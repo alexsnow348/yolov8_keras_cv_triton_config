@@ -1,0 +1,1 @@
+## The keras cv version is required to be 0.5.0 which depends on the keras version 2.15.0 and tensorflow 2.15.0.

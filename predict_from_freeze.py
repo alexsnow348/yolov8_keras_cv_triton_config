@@ -8,8 +8,9 @@ from keras_cv.src import bounding_box
 
 # customize to use cpu only for onnx conversion
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
-class_ids = ["cell", "rgb_100", "rgb_010", "rgb_001", "rgb_110", "rgb_011", "rgb_101", "cell_cluster"]
-class_mapping = dict(zip(range(len(class_ids)), class_ids))
+CLASS_NAMES = ["RGB_100", "RGB_011", "RGB_001", "RGB_010", "RGB_101", "Object of concern", "RGB_110", "Cell cluster"]
+class_mapping = dict(zip(range(len(CLASS_NAMES)), CLASS_NAMES))    
+
 BOX_REGRESSION_CHANNELS = 64
 
 
@@ -219,7 +220,6 @@ if __name__ == "__main__":
     boxes = predictions["boxes"]
     scores = predictions["classes"]
     boxes = decode_regression_to_boxes(boxes)
-    print(data.shape[1:])
     anchor_points, stride_tensor = get_anchors(image_shape=data.shape[1:])
     stride_tensor = ops.expand_dims(stride_tensor, axis=-1)
 

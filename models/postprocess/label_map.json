@@ -1,10 +1,10 @@
 {
-    "Cell": 0,
-    "Cell_RGB_100": 1,
-    "Cell_RGB_010": 2,
-    "Cell_RGB_001": 3,
-    "Cell_RGB_110": 4,
-    "Cell_RGB_011": 5,
-    "Cell_RGB_101": 6,
+    "RGB_100": 0,
+    "RGB_011": 1,
+    "RGB_001": 2,
+    "RGB_010": 3,
+    "RGB_101": 4,
+    "Object of concern": 5,
+    "RGB_110": 6,
     "Cell cluster": 7
 }

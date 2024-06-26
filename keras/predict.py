@@ -9,8 +9,8 @@ from matplotlib import pyplot as plt
 
 # customize to use cpu only for onnx conversion
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
-class_ids = ["cell", "rgb_100", "rgb_010", "rgb_001", "rgb_110", "rgb_011", "rgb_101", "cell_cluster"]
-class_mapping = dict(zip(range(len(class_ids)), class_ids))    
+CLASS_NAMES = ["RGB_100", "RGB_011", "RGB_001", "RGB_010", "RGB_101", "Object of concern", "RGB_110", "Cell cluster"]
+class_mapping = dict(zip(range(len(CLASS_NAMES)), CLASS_NAMES))    
 
 def load_image(image_path):
     image = tf.io.read_file(image_path)

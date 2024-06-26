@@ -1,5 +1,5 @@
 # Overview
-This is a Triton Inference Server container for YOLOv8 models which built with keras-cv.
+This is a Triton Inference Server container for YOLOv8 models which built with latest keras-cv.
 
 # Directory Structure
 ```
@@ -36,6 +36,7 @@ DOCKER_NAME="yolov8-triton"
 docker run --gpus all \
     -it --rm \
     --net=host \
+    --shm-size=2g \
     -v ./models:/models \
     $DOCKER_NAME
 ```

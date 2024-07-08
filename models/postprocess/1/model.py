@@ -249,7 +249,6 @@ class TritonPythonModel:
             input_image = pb_utils.get_input_tensor_by_name(request, "input_2")
             input_image = input_image.as_numpy()
             image_shape = input_image.shape[1:]
-            print(image_shape)
             scores = scores.as_numpy()
             boxes = boxes.as_numpy()
             boxes_tensor = tf.convert_to_tensor(boxes, np.float32)
@@ -268,7 +267,6 @@ class TritonPythonModel:
                                          image_shape=image_shape)
 
             num_detections = result["num_detections"][0].numpy()
-            print(num_detections)
             # Create a reverse mapping (swap keys and values)
             reverse_mapping_dict = {v: k for k, v in label_map.items()}
             class_list = result["classes"][0].numpy()[:num_detections]

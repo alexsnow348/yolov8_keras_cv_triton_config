@@ -12,7 +12,7 @@ curl -X POST http://localhost:8000/v2/models/yolov8_combined_ensemble/trace/sett
            "log_frequency": "1"
          }'
 
-# to start triton server
+# to start triton server on cpu
 docker run --name=TritonInferenceServer --rm  \
   -p8000:8000 -p8001:8001 -p8002:8002 -v ./models/:/model_repo yolov8-triton:latest \
    tritonserver --model-repository=/model_repo

@@ -1,4 +1,4 @@
-name: "yolov8_ensemble"
+name: "yolov8_combined_ensemble"
 platform: "ensemble"
 # max_batch_size: 1
 

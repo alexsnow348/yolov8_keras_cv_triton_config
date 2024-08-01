@@ -218,6 +218,9 @@ if __name__ == "__main__":
     data = np.asarray(img, dtype=np.float32).reshape(1, 1265, 1268, 3)
     # reloaded_artifact = tf.saved_model.load("models/yolov8_tf/1/model.savedmodel")
     reloaded_artifact = tf.saved_model.load("/data/models/haider/YOLOv8/yolov8_saved_models/Yolov8_s_400um_combined_small")
+    # reloaded_artifact = tf.saved_model.load("/data/models/haider/YOLOv8/yolov8_saved_models/Yolov8_400um_unstained_cell_small")
+    print(reloaded_artifact.signatures["serving_default"].structured_input_signature) 
+    print(reloaded_artifact.signatures["serving_default"].structured_outputs)  
     predictions = reloaded_artifact.serve(data)
     
     boxes = predictions["boxes"]

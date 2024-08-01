@@ -3,7 +3,7 @@ import json
 import cv2
 
 im = cv2.imread(
-    "./data/Sub A-1 Well A-15_2023_07_20__11_34_33__13_with_bbox_more.jpg"
+    "data/TestImg.png"
 )
 # Generate dummy input data
 # input_data = np.random.rand(1, 1265, 1268, 3).astype(np.float32)

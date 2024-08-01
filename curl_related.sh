@@ -13,7 +13,7 @@ curl -X POST http://localhost:8000/v2/models/yolov8_combined_ensemble/trace/sett
          }'
 
 # to start triton server on cpu
-docker run --name=TritonInferenceServer --rm  \
+docker run --name=TritonInferenceServer --rm --shm-size=2g  \
   -p8000:8000 -p8001:8001 -p8002:8002 -v ./models/:/model_repo yolov8-triton:latest \
-   tritonserver --model-repository=/model_repo
+  tritonserver --model-repository=/model_repo --trace-config mode=opentelemetry --trace-config opentelemetry,url=http://10.10.12.30:4318/v1/traces
 

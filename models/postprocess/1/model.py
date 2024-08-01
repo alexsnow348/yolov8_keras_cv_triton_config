@@ -257,11 +257,11 @@ class TritonPythonModel:
             num_detections = result["num_detections"].numpy()
             # Create a reverse mapping (swap keys and values)
             reverse_mapping_dict = {v: k for k, v in label_map.items()}
-            class_list = result["classes"].numpy()[:num_detections]
+            class_list = result["classes"].numpy()
             # Map the provided value to its corresponding key using the reverse mapping
             mapped_label = [reverse_mapping_dict.get(value) for value in class_list]
-            bounding_boxes = result["boxes"].numpy()[:num_detections]
-            confidence = result["confidence"].numpy()[:num_detections]
+            bounding_boxes = result["boxes"].numpy()
+            confidence = result["confidence"].numpy()
 
             # Create output tensors. You need pb_utils.Tensor
             # objects to create pb_utils.InferenceResponse.

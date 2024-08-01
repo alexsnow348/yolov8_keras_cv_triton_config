@@ -200,47 +200,35 @@ class TritonPythonModel:
             """
 
             class_prediction = ops.sigmoid(class_prediction)
-            confidence_prediction = ops.max(class_prediction, axis=-1)
-            idx, valid_det = tf.image.non_max_suppression_padded(
-                box_prediction,
-                confidence_prediction,
-                max_output_size=100,
-                iou_threshold=iouthreshold,
-                score_threshold=threshold,
-                pad_to_max_output_size=True,
-                sorted_input=False,
-            )
+            confidence_prediction = ops.max(class_prediction, axis=-1)        
+            box_prediction_numpy = box_prediction[0].numpy()
+            scores_numpy = confidence_prediction[0].numpy()
+            
+            # numpy to tensor
+            box_tensor = ops.array(box_prediction_numpy)
+            score_tensor = ops.array(scores_numpy)
+            length = len([i for i in scores_numpy if i > threshold])
+            selected_indices, _ = tf.image.non_max_suppression_with_scores(
+                    boxes=box_tensor,
+                    max_output_size=length,
+                    score_threshold=threshold,
+                    iou_threshold=iouthreshold,
+                    scores=score_tensor,
+                )
 
-            box_prediction = ops.take_along_axis(
-                box_prediction, ops.expand_dims(idx, axis=-1), axis=1
-            )
-            box_prediction = ops.reshape(box_prediction, (-1, 100, 4))
-            confidence_prediction = ops.take_along_axis(
-                confidence_prediction, idx, axis=1
-            )
-            class_prediction = ops.take_along_axis(
-                class_prediction, ops.expand_dims(idx, axis=-1), axis=1
-            )
-
-            box_prediction = bounding_box.convert_format(
-                box_prediction,
-                source="xyxy",
-                target="xyxy",
-                images=images,
-                image_shape=image_shape,
-            )
+            selected_boxes = tf.gather(box_prediction[0], selected_indices)
+            selected_score = tf.gather(confidence_prediction[0], selected_indices)
+            class_prediction = tf.gather(class_prediction[0], selected_indices)
             bounding_boxes = {
-                "boxes": box_prediction,
-                "confidence": confidence_prediction,
+                "boxes": selected_boxes,
+                "confidence": selected_score,
                 "classes": ops.argmax(class_prediction, axis=-1),
-                "num_detections": valid_det,
+                "num_detections": ops.array([len(selected_indices)]),
             }
 
             # this is required to comply with KerasCV bounding box format.
-            return bounding_box.mask_invalid_detections(
-                bounding_boxes, output_ragged=False
-            )
-
+            return bounding_boxes
+        
         # Every Python backend must iterate over everyone of the requests
         # and create a pb_utils.InferenceResponse for each of them.
         for request in requests:
@@ -266,14 +254,14 @@ class TritonPythonModel:
             result = non_max_suppression(box_preds, scores_tensor, 
                                          image_shape=image_shape)
 
-            num_detections = result["num_detections"][0].numpy()
+            num_detections = result["num_detections"].numpy()
             # Create a reverse mapping (swap keys and values)
             reverse_mapping_dict = {v: k for k, v in label_map.items()}
-            class_list = result["classes"][0].numpy()[:num_detections]
+            class_list = result["classes"].numpy()[:num_detections]
             # Map the provided value to its corresponding key using the reverse mapping
             mapped_label = [reverse_mapping_dict.get(value) for value in class_list]
-            bounding_boxes = result["boxes"][0].numpy()[:num_detections]
-            confidence = result["confidence"][0].numpy()[:num_detections]
+            bounding_boxes = result["boxes"].numpy()[:num_detections]
+            confidence = result["confidence"].numpy()[:num_detections]
 
             # Create output tensors. You need pb_utils.Tensor
             # objects to create pb_utils.InferenceResponse.

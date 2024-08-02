@@ -36,7 +36,7 @@ DOCKER_NAME="yolov8-triton"
 docker run --gpus all \
     -it --rm \
     --net=host \
-    --shm-size=2g \
+    --shm-size=1g \
     -v ./models:/models \
     $DOCKER_NAME
 ```

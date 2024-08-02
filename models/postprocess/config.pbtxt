@@ -3,7 +3,7 @@ backend: "python"
 parameters: [
 {
   key: "LABEL_MAP_PATH",
-  value: {string_value: "/models/postprocess/label_map.json"}
+  value: {string_value: "/model_repo/postprocess/label_map.json"}
 },
 {
   key: "THRESHOLD", 
@@ -11,7 +11,7 @@ parameters: [
 },
 {
   key: "IOUTHRESHOLD",
-  value: {string_value: "0.2"}
+  value: {string_value: "0.3"}
 }
 ]
 input [   
@@ -50,3 +50,9 @@ output [
     }
 ]
 
+instance_group [
+  {
+    count: 1
+    kind: KIND_CPU
+  }
+]

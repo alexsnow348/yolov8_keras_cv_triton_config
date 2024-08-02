@@ -5,14 +5,17 @@ import numpy as np
 from keras_cv.src.backend import keras
 from keras_cv.src.backend import ops
 from keras_cv.src import bounding_box
+from line_profiler import LineProfiler
 
 # customize to use cpu only for onnx conversion
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
-CLASS_NAMES = ["RGB_100", "RGB_011", "RGB_001", "RGB_010", "RGB_101", "Object of concern", "RGB_110", "Cell cluster"]
+# CLASS_NAMES = ["RGB_100", "RGB_011", "RGB_001", "RGB_010", "RGB_101", "Object of concern", "RGB_110", "Cell cluster"]
+CLASS_NAMES = ["cell", "rgb_001", "rgb_100", "rgb_011", "rgb_010", "rgb_110", "rgb_101", "cell_cluster"]
 class_mapping = dict(zip(range(len(CLASS_NAMES)), CLASS_NAMES))    
 
 BOX_REGRESSION_CHANNELS = 64
-
+SCORE_THRESHOLD = 0.6
+IOU_THRESHOLD = 0.3
 
 def decode_regression_to_boxes(preds):
     """Decodes the results of the YOLOV8Detector forward-pass into boxes.
@@ -122,50 +125,35 @@ def non_max_suppression(
         """
 
         class_prediction = ops.sigmoid(class_prediction)
-        confidence_prediction = ops.max(class_prediction, axis=-1)
-        idx, valid_det = tf.image.non_max_suppression_padded(
-                box_prediction,
-                confidence_prediction,
-                max_output_size=100,
-                iou_threshold=0.2,
-                score_threshold=0.6,
-                pad_to_max_output_size=True,
-                sorted_input=False,
+        confidence_prediction = ops.max(class_prediction, axis=-1)        
+        box_prediction_numpy = box_prediction[0].numpy()
+        scores_numpy = confidence_prediction[0].numpy()
+        
+        # numpy to tensor
+        box_tensor = ops.array(box_prediction_numpy)
+        score_tensor = ops.array(scores_numpy)
+        length = len([i for i in scores_numpy if i > SCORE_THRESHOLD])
+        selected_indices, _ = tf.image.non_max_suppression_with_scores(
+                boxes=box_tensor,
+                max_output_size=length,
+                score_threshold=SCORE_THRESHOLD,
+                iou_threshold=IOU_THRESHOLD,
+                scores=score_tensor,
             )
 
-        box_prediction = ops.take_along_axis(
-            box_prediction, ops.expand_dims(idx, axis=-1), axis=1
-        )
-        box_prediction = ops.reshape(
-            box_prediction, (-1, 100, 4)
-        )
-        confidence_prediction = ops.take_along_axis(
-            confidence_prediction, idx, axis=1
-        )
-        class_prediction = ops.take_along_axis(
-            class_prediction, ops.expand_dims(idx, axis=-1), axis=1
-        )
-
-        box_prediction = bounding_box.convert_format(
-            box_prediction,
-            source="xyxy",
-            target="xyxy",
-            images=images,
-            image_shape=image_shape,
-        )
+        selected_boxes = tf.gather(box_prediction[0], selected_indices)
+        selected_score = tf.gather(confidence_prediction[0], selected_indices)
+        class_prediction = tf.gather(class_prediction[0], selected_indices)
         bounding_boxes = {
-            "boxes": box_prediction,
-            "confidence": confidence_prediction,
+            "boxes": selected_boxes,
+            "confidence": selected_score,
             "classes": ops.argmax(class_prediction, axis=-1),
-            "num_detections": valid_det,
+            "num_detections": ops.array([len(selected_indices)]),
         }
 
         # this is required to comply with KerasCV bounding box format.
-        return bounding_box.mask_invalid_detections(
-            bounding_boxes, output_ragged=False
-        )
-        
-
+        return bounding_boxes
+    
 def load_image(image_path):
     image = tf.io.read_file(image_path)
     return image
@@ -178,6 +166,12 @@ def transform_xyxy_to_minmax(x1, y1, x2, y2):
     ymax = max(y1, y2)
     return xmin, ymin, xmax, ymax
 
+def transform_xywh_to_minmax(x, y, w, h):
+    xmin = x - w / 2
+    ymin = y - h / 2
+    xmax = x + w / 2
+    ymax = y + h / 2
+    return xmin, ymin, xmax, ymax
 
 def draw_detection(img_path, bboxes, class_labels, draw_path="data/"):
     """Draw bounding boxes on the image."""
@@ -185,6 +179,9 @@ def draw_detection(img_path, bboxes, class_labels, draw_path="data/"):
     for i, bbox in enumerate(bboxes):
         x1, y1, x2, y2 = bbox
         xmin, ymin, xmax, ymax = transform_xyxy_to_minmax(x1, y1, x2, y2)
+        
+        # x, y, w, h = bbox
+        # xmin, ymin, xmax, ymax = transform_xywh_to_minmax(x, y, w, h)
 
         if class_labels[i].upper() == "RGB_100":
             color = (0, 0, 255)
@@ -204,17 +201,26 @@ def draw_detection(img_path, bboxes, class_labels, draw_path="data/"):
             color,
             2,
         )
-    save_suffix = img_path.split("/")[-1].split(".")[0] + "_with_bbox.jpg"
+    save_suffix = img_path.split("/")[-1].split(".")[0] + "_with_bbox_more.jpg"
     save_path = draw_path + save_suffix
     cv2.imwrite(save_path, image)
 
 
+profiler = LineProfiler()
+profiler.add_function(non_max_suppression)
+profiler.enable_by_count()
+
 if __name__ == "__main__":
-    image_path = "/home/wut/playground/DQ_Arralyze_MachineLearning/rest_related/mldeployment/test/TestImg.png"
+    # image_path = "/home/wut/playground/DQ_Arralyze_MachineLearning/rest_related/mldeployment/test/TestImg.png"
+    image_path = "/home/haider/playground/test/samples/Sub A-1 Well A-15_2023_07_20__11_34_33__13.png"
     img = cv2.imread(image_path, cv2.IMREAD_UNCHANGED)
     img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
     data = np.asarray(img, dtype=np.float32).reshape(1, 1265, 1268, 3)
-    reloaded_artifact = tf.saved_model.load("models/yolov8_tf/1/model.savedmodel")
+    # reloaded_artifact = tf.saved_model.load("models/yolov8_tf/1/model.savedmodel")
+    reloaded_artifact = tf.saved_model.load("/data/models/haider/YOLOv8/yolov8_saved_models/Yolov8_s_400um_combined_small")
+    # reloaded_artifact = tf.saved_model.load("/data/models/haider/YOLOv8/yolov8_saved_models/Yolov8_400um_unstained_cell_small")
+    print(reloaded_artifact.signatures["serving_default"].structured_input_signature) 
+    print(reloaded_artifact.signatures["serving_default"].structured_outputs)  
     predictions = reloaded_artifact.serve(data)
     
     boxes = predictions["boxes"]
@@ -222,18 +228,16 @@ if __name__ == "__main__":
     boxes = decode_regression_to_boxes(boxes)
     anchor_points, stride_tensor = get_anchors(image_shape=data.shape[1:])
     stride_tensor = ops.expand_dims(stride_tensor, axis=-1)
-
     box_preds = dist2bbox(boxes, anchor_points) * stride_tensor
-    box_preds = bounding_box.convert_format(
-                box_preds,
-                source="xyxy",
-                target="xyxy",
-                images=data,
-            )
     result = non_max_suppression(box_preds, scores, image_shape=data.shape[1:])
-    num_detections = result["num_detections"][0].numpy()
-    classes = result["classes"][0].numpy()[:num_detections]
-    boxes = result["boxes"][0].numpy()[:num_detections]
-    confidence = result["confidence"][0].numpy()[:num_detections]
+    num_detections = result["num_detections"].numpy()
+    classes = result["classes"].numpy()
+    boxes = result["boxes"].numpy()
+    confidence = result["confidence"].numpy()
     class_labels = [class_mapping[c] for c in classes]
     draw_detection(image_path, boxes, class_labels)
+    profiler.print_stats()
+
+
+
+

@@ -1,4 +1,4 @@
-FROM nvcr.io/nvidia/tritonserver:23.01-py3
+FROM nvcr.io/nvidia/tritonserver:24.01-py3
 
 # Install dependencies
 RUN pip install opencv-python && \

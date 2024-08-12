@@ -15,16 +15,15 @@ curl -X POST http://localhost:8000/v2/models/yolov8_combined_ensemble/trace/sett
 
 # to start triton server on cpu - yolo
 docker run --name=TritonInferenceServer --rm --shm-size=2g  \
-  -p8000:8000 -p8001:8001 -p8002:8002 -v ./models/:/model_repo yolov8-triton:latest \
-  tritonserver --model-repository=/model_repo --trace-config mode=opentelemetry --trace-config opentelemetry,url=http://10.10.12.30:4318/v1/traces
-
+ 
+  
 ## Faster RCNN
 # to trigger dummpy triton inference call
 curl -X POST http://localhost:8000/v2/models/ensemble_model/versions/1/infer  \
     -H "Content-Type: application/json"  -d @input_data_fastercnn.json
 
 # to enable trace for single inference
-curl -X POST http://localhost:8000/v2/models/ensemble_model/trace/setting \
+curl -X POST http://localhost:8000/v2/models/yolov8_combined_ensemble/trace/setting \
      -H "Content-Type: application/json" \
      -d '{
            "trace_level": ["TIMESTAMPS"],
@@ -34,7 +33,13 @@ curl -X POST http://localhost:8000/v2/models/ensemble_model/trace/setting \
          }'
 
 # to start triton server on cpu - yolo
-docker run --name=TritonInferenceServer --rm --shm-size=2g  \
-  -p8000:8000 -p8001:8001 -p8002:8002 -v  /data/model_repository:/model_repo yolov8-triton:latest \
-  tritonserver --model-repository=/model_repo --trace-config mode=opentelemetry --trace-config opentelemetry,url=http://10.10.12.30:4318/v1/traces
+docker run --name=TritonInferenceServer --rm --shm-size=2g -d  \
+  -p8000:8000 -p8001:8001 -p8002:8002 -v  ./models:/model_repo yolov8-triton:latest \
+  tritonserver --model-repository=/model_repo --trace-config mode=opentelemetry --trace-config opentelemetry,url=http://10.10.12.30:4318/v1/traces \
+  --trace-log-frequency 1 --trace-rate 1  --trace-count -1	--trace-level  TIMESTAMPS
 
+# sudo mount -t cifs -o user=testuser,domain=testdomain //192.168.1.100/freigabe /mnt
+
+sudo mount -t cifs -o username=wut.hlaing,domain=LPKF.com //10.10.10.45/ARRALYZE_Picture /data/biolab_arralyze_picture_data
+
+./bin/opensearch-plugin  install https://github.com/aiven/prometheus-exporter-plugin-for-opensearch/releases/download/2.13.0.0/prometheus-exporter-2.13.0.0.zip

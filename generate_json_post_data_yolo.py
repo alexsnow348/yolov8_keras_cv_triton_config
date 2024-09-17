@@ -16,7 +16,7 @@ flat_input_data = input_data.flatten().tolist()
 payload = {
     "inputs": [
         {
-            "name": "input_2",
+            "name": "input_8",
             "shape": input_data.shape,
             "datatype": "FP32",
             "data": flat_input_data

@@ -33,7 +33,7 @@ docker build -t $DOCKER_NAME .
 2. Run Triton Inference Server:
 ```
 DOCKER_NAME="yolov8-triton"
-docker run --gpus all \
+docker run  \
     -it --rm \
     --net=host \
     --shm-size=1g \

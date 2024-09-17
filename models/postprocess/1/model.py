@@ -234,7 +234,7 @@ class TritonPythonModel:
         for request in requests:
             scores = pb_utils.get_input_tensor_by_name(request, "classes")
             boxes = pb_utils.get_input_tensor_by_name(request, "boxes")
-            input_image = pb_utils.get_input_tensor_by_name(request, "input_2")
+            input_image = pb_utils.get_input_tensor_by_name(request, "input_8")
             input_image = input_image.as_numpy()
             image_shape = input_image.shape[1:]
             scores = scores.as_numpy()

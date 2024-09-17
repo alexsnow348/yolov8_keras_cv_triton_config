@@ -1,0 +1,5 @@
+
+Time taken: 0.626221 seconds
+DNS lookup time: 0.000013 seconds
+Connect time: 0.000096 seconds
+Start transfer time: 0.000601 seconds

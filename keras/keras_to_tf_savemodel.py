@@ -1,6 +1,7 @@
 import keras_cv
 import os
 
+
 # customize to use cpu only for onnx conversion
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
@@ -15,12 +16,14 @@ model = keras_cv.models.YOLOV8Detector(
     backbone=backbone,
     fpn_depth=3,
 )
+
 # model.prediction_decoder = keras_cv.layers.MultiClassNonMaxSuppression(
 #     bounding_box_format="xyxy",
 #     from_logits=True,
 #     iou_threshold=0.2,
 #     confidence_threshold=0.6,
 # )
+
 model.load_weights("keras/model_yolov8small.h5")
 
 # Create the artifact

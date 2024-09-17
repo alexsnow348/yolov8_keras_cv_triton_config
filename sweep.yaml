@@ -1,0 +1,4 @@
+model_repository: /workspace/models
+profile_models:
+    - yolov8_combined
+    - yolov8_combined_onnx
